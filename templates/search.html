@@ -183,6 +183,7 @@
         $('#container_search_form form').submit();
       }
     });
+    
     $('#add-queue-link').on('click', function (e) {
       e.preventDefault();
       if ($('.search-selectize').find(":selected").text()) {
@@ -207,28 +208,38 @@
       }
     });
 
+    $('.add-queue-link').on('click', function (e) {
+      e.preventDefault();
+      
+        $(this).attr("disabled", "true");
+        $(this).addClass("is-loading");
+        setTimeout(function(){$(this).removeClass("is-loading");}, 1000)
+        $.ajax({
+          url: "{{ url_for('enqueue') }}",
+          type: 'post',
+          data:$(this).parents("form").serialize(),
+          success: function(data){
+            var obj = JSON.parse(data);
+            if (obj.success) {
+              showNotification("Added song to queue: " + obj.song, "is-success")
+            }
+            else {
+              showNotification("Song is already in the queue: " + obj.song, "is-danger")
+            }
+            $select[0].selectize.clear()
+            //setTimeout(function(){location.href="{{ url_for('search') }}"}, 1000)
+          }
+       });
+      }
+    );
+
     //END SELECTIZE CHANGES
 
-    $('#youtube-link').attr('href', $('#search_result_selector').val());
-    $('#youtube-link').text($('#search_result_selector').val());
 
-    //get youtube thumbnail based on ID
-    i = -1;
-    changeImage();
+    
+    setInterval(function () { changeImage(); }, 2000);
 
-    $(document).on('change', '#search_result_selector', function () {
-      var url = $('#search_result_selector').val();
-      $('#youtube-link').attr('href', url);
-      $('#youtube-link').text(url);
-      changeImage();
-    });
-    //alow click of images
-    $('#youtube-thumb').click(function (e) {
-      changeImage();
-    });
-    setInterval(function () { $('#youtube-thumb').trigger('click'); }, 2000);
-
-    $('#advanced-settings').hide()
+    //$('#advanced-settings').hide()
 
     // handle show advanced state
     $('#show-advanced').on('change', function () {
@@ -240,20 +251,25 @@
       }
     });
 
+
+
     // handle direct download url input change
     $('#direct-download-url').on('input', function () { 
       var v = $('#direct-download-url').val()
       if (isYoutubeURL(v)) {
         $('#direct-download-button').removeAttr("disabled")
+        $('#direct-download-button').addClass("is-success")
       }
       else {
         $('#direct-download-button').attr("disabled", true)
+        $('#direct-download-button').removeClass(" is-success")
       }
     });
 
-    var user = Cookies.get("user");
+    window.user = Cookies.get("user");
+    console.log("window.user: " + window.user);
 
-    if (!user) {
+    if (!window.user) {
         let name = window.prompt(
           // {# MSG: Prompt which asks the user their name when they first navigate to the page. #}
           "{{ _('Please enter your name. This will show up next to the songs you queue up from this device.') }}"
@@ -265,6 +281,15 @@
       }
 
     $(".song-added-by").val(user)
+
+    $('#songaddedbyglobal').on('change', function () {
+      newuser = $( this ).val();
+      $(".song-added-by").val(newuser);
+      Cookies.set("user", newuser , { expires: 3650 })
+      window.user = newuser
+      console.log("window.user: " + window.user);
+    });
+
   });
  
   function isYoutubeURL(s) {
@@ -276,25 +301,37 @@
     }
   }
 
+  i = -1;
   function changeImage() {
     var next = (++i % 4);
-    var youtube_id = $('#search_result_selector').find(':selected').data('ytid');
-    var fn = (next == 0) ? "default" : next;
-    var img_src = 'https://img.youtube.com/vi/' + youtube_id + '/mq' + fn + '.jpg'
-    $('#youtube-thumb').attr("src", img_src);
+    searchresults = $('.search_result');
+    searchresults.each( function(){
+      var youtube_id = $(this).data('ytid');
+      var fn = (next == 0) ? "default" : next;
+      var img_src = 'https://img.youtube.com/vi/' + youtube_id + '/mq' + fn + '.jpg'
+      $(this).find('img.youtube-thumb').attr("src", img_src);
+    });
   }  
 </script>
 {% endblock %}
 
 {% block header %}
 {# MSG: Title for the search page. #}
-<h1>{% block title %}{% trans %}Search / Add New{% endtrans %}{% endblock %}</h1>
+{# <h1>{% block title %}{% trans %}Search / Add New{% endtrans %}{% endblock %}</h1> #}
 {% endblock %}
 
 {% block content %}
 
 <div>
-  <div class="field" id="container_queue_form">
+<div class="box has-background-black-bis">
+  <label for="songaddedbyglobal">Add song for </label>
+    <input class="song-added-by" id="songaddedbyglobal" type="text" name="song-added-by" placeholder="Enter Karaoke Singer here" />
+  </div>
+
+  <div id="container_queue_form" class="box has-background-black-bis">
+
+
+    <h1> Search </h1>
     <form id="queue-form" >
       <div id="search-field" class="field has-addons" style="margin-bottom: 5px">
         <div class="control" style="width:100%">
@@ -312,48 +349,54 @@
         <input class="song-added-by" type="hidden" name="song-added-by" />
       </div>
       <div class="control has-text-right">
+        
+          <label class="checkbox">
+            <input type="checkbox" id="include-non-karaoke" name="include-non-karaoke">
+            
+            {# MSG: Checkbox label which enables matching songs which are not karaoke versions
+               (i.e. the songs still have a singer and are not just instrumentals.) #}
+            {% trans %}Include non-karaoke matches{% endtrans %}
+          </label>
+        
+      </div>
+      <div class="control has-text-right">
         <a id="clear-search" class="has-text-danger is-size-7" style="margin-right: 10px"> 
           {# MSG: Link which clears the text from the search box. #}
           {% trans %}Clear{% endtrans %}</a>
-        <label class="checkbox is-size-7">
-          <input type="checkbox" id="show-advanced" name="show-advanced">
+        
+        {% if False %}
+          <label class="checkbox is-size-7">
+          <input type="checkbox" id="show-advanced" name="show-advanced" checked>
           {# MSG: Checkbox label which enables more options when searching. #}
           {% trans %}Advanced{% endtrans %}
         </label>
+      {% endif %}
       </div>
       
       <div>
         <p class="help" style="margin-top: 15px">
           {# MSG: Help text below the search bar. #}
           {% trans -%}
-            Type a song (title/artist) to search the available songs and click 'Add to queue' to add it to the queue.
+            {# Type a song (title/artist) to search the available songs and click 'Add to queue' to add it to the queue. #}
           {%- endtrans %}
         </p> 
         <p class="help">
           {# MSG: Additonal help text below the search bar. #}
           {% trans -%}
-            If the song doesn't appear in the "Available Songs" dropdown, click 'Search' to find it on Youtube
+            {# If the song doesn't appear in the "Available Songs" dropdown, click 'Search' to find it on Youtube #}
           {%- endtrans %}
         </p>
       </div>
     </form>
   </div>
-
+  <hr>
   <div>
+    {% if not search_results %}
     <div id="advanced-settings" class="box has-background-black-bis" style="margin-top: 10px">
-      <div class="control">
-        <label class="checkbox">
-          <input type="checkbox" id="include-non-karaoke" name="include-non-karaoke">
-          {# MSG: Checkbox label which enables matching songs which are not karaoke versions
-             (i.e. the songs still have a singer and are not just instrumentals.) #}
-          {% trans %}Include non-karaoke matches{% endtrans %}
-        </label>
-      </div>
-      <hr>
       <div class="control">
         <div class="label">
           {# MSG: Label for an input which takes a YouTube url directly instead of searching titles. #}
-          {% trans %}Direct download YouTube url:{% endtrans %}
+          {% trans %}Directly add via YouTube url:{% endtrans %}
         </div>
         <form  action="{{ url_for('download') }}" method="post">
           <input class="input" id="direct-download-url" type="text" name="song-url" />
@@ -362,7 +405,7 @@
             <label class="checkbox">
               <input type="checkbox" checked name="queue">
               {# MSG: Checkbox label which marks the song to be added to the queue after it finishes downloading. #}
-              {% trans %}Add to queue once downloaded{% endtrans %}
+              {% trans %}Add direct download to queue once downloaded{% endtrans %}
             </label>
           </div>
           <div class="has-text-right" style="margin-top: 5px">
@@ -374,6 +417,7 @@
         </form>
       </div>
     </div>
+    {% endif %}
   </div>
 
   <hr>
@@ -394,15 +438,19 @@
       Searching YouTube for <small><i>'{{ search_term }}'</i></small>
     {%- endtrans %}
   </div>
-  {% if search_results %}
-  <div class="field" id="container_search_result">
+  {% if search_results and False %}
+  {# Use for local search results selectize #}
+  <div class="field" id="container_search_result" >
     <form action="{{ url_for('download') }}" method="post">
+      <input class="song-added-by" type="hidden" name="song-added-by" />
+      <hr>
       <label class="label">
         {# MSG: Html text which displays what was searched for, in quotes. #}
         {% trans search_term=search_string -%}
           Search results for <small><i>'{{search_string}}'</i></small>
         {%- endtrans %}
       </label>
+      
       <div class="field select">
         <select id="search_result_selector" name='song-url'>>
           {% for title,url,id in search_results %}
@@ -411,7 +459,7 @@
         </select>
         
       </div>
-      <input class="song-added-by" type="hidden" name="song-added-by" />
+      
       <p class="help">
         {# MSG: Help text which explains that the select box above can be operated to select different search results. #}
         {% trans %}Click dropdown to show more results{% endtrans %}
@@ -439,6 +487,66 @@
   </div>
 </div>
 {% else %}
+{% endif %}
+
+
+{% if search_results %}
+
+{% for title,url,id in search_results %}
+  <div class="search_result" data-ytid="{{id}}">
+    
+      
+      <h2>{{title}}</h2>
+      <div float="left">
+
+        <a href="{{url}}">
+          <img class="previewimage youtube-thumb" src="https://img.youtube.com/vi/{{id}}/mq1.jpg">
+        </a>
+      </div>
+      <div float="right">
+        Preview in Youtube: <a href="{{url}}" target="_blank"> {{url}}</a><br>
+        {# <button class="button is-rounded is-success" type="submit">Wish for this song</button> #}
+        {% if admin %}
+          {# MSG: Download and enqueue #}
+          <form  action="{{ url_for('download') }}" method="post">
+            <input class="input"  type="hidden" name="song-url" value="{{url}}"/>
+            <input class="song-added-by" type="hidden" name="song-added-by" value="valuesetbyjs" />
+            <input type="hidden" name="queue" value="on">
+            <div class="has-text-right" style="margin-top: 5px">
+              <button class="button is-small is-rounded is-success" type="submit">
+                {# MSG: Button label for the direct download form's submit button. #}
+                Download and Enqueue
+              </button>
+            </div>
+          </form>
+        {% endif %}
+        {% if admin %}
+          {# MSG: Download only - dont enqueue #}
+          <form  action="{{ url_for('download') }}" method="post">
+            <input class="input" type="hidden" name="song-url" value="{{url}}"/>
+            <input class="song-added-by" type="hidden" name="song-added-by" value="valuesetbyjs" />
+            <div class="has-text-right" style="margin-top: 5px">
+                {# <input type="hidden" name="queue" value="false"> #}
+                <button class="button is-small is-rounded is-success"  id="direct-download-button" type="submit">
+                Downloaded only
+                </button>
+            </div>
+
+          
+          </form>
+        {% endif %}
+      </div>
+    <form action="{{ url_for('wishlist') }}" method="post">
+        <input class="song-added-by" type="hidden" name="song-added-by" value="valuesetbyjs">
+        <input class="input" type="hidden"  name="song-url" value="{{url}}">
+        <input type="hidden" type="text" name="ytid" value="{{id}}">
+
+    </form>
+
+    
+  </div>
+  <hr>
+{% endfor %}
 {% endif %}
 
 {% endblock %}
