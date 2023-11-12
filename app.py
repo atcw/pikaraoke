@@ -287,6 +287,33 @@ def oldsearch():
         admin=is_admin()
     )
 
+@app.route("/addtowishlist", methods=["POST", "GET"])
+def wishlist():
+    d = request.form.to_dict()
+    song = d["song-url"]
+    user = d["song-added-by"]
+
+    if "song" in request.args:
+        k.wishlist(song, user)
+    return json.dumps({"song": song, "success": True })
+
+@app.route("/wishlist")
+def getwishlist():
+    return render_template(
+        "wishlist.html", queue=k.whishlist, site_title=site_name, title="Queue", admin=is_admin()
+    )
+
+@app.route("/downloadAndEnqueueWish", methods=["POST", "GET"])
+def dlandenqueuewish():
+    if "song_url" in request.args:
+        song_url = request.args["song_url"]
+    else:
+        d = request.form.to_dict()
+        song_url = d["song-to-add"]
+    if  k.find_song_by_youtube_id(k.get_youtube_id_from_url(song_url)) is None:
+        k.download_video(song_url,True,"User")
+    return json.dumps({"song": song_url, "success": True })
+
 @app.route("/autocomplete")
 def autocomplete():
     q = request.args.get('q').lower()
