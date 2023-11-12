@@ -31,6 +31,7 @@ class Karaoke:
     raspi_wifi_config_installed = os.path.exists(raspi_wifi_conf_file)
 
     queue = []
+    wishlist = []
     available_songs = []
     now_playing = None
     now_playing_filename = None
@@ -346,17 +347,21 @@ class Karaoke:
 
             blitY = self.screen.get_rect().bottomleft[1] - 80
 
+             
+
             if not self.hide_ip:
                 p_image = pygame.image.load(self.qr_code_path)
-                p_image = pygame.transform.scale(p_image, (150, 150))
-                self.screen.blit(p_image, (20, blitY - 125))
+                img_height = 300
+                img_topleft = self.screen.get_rect().bottomleft[1] - (img_height * 2 / 2) - 80
+                p_image = pygame.transform.scale(p_image, (300, 300))
+                self.screen.blit(p_image, (20, img_topleft))
                 if not self.is_network_connected():
                     text = self.font.render(
                         "Wifi/Network not connected. Shutting down in 10s...",
                         True,
                         (255, 255, 255),
                     )
-                    self.screen.blit(text, (p_image.get_width() + 35, blitY))
+                    self.screen.blit(text, (p_image.get_width() + 35, img_topleft))
                     time.sleep(10)
                     logging.info(
                         "No IP found. Network/Wifi configuration required. For wifi config, try: sudo raspi-config or the desktop GUI: startx"
@@ -586,6 +591,10 @@ class Karaoke:
                 return True
         return False
 
+    def addtowishlist(self, song_url, title, user="anon"):
+        self.wishlist.append({"user": user, "url": song_url, "title":title })
+
+
     def enqueue(self, song_path, user="Pikaraoke"):
         if (self.is_song_in_queue(song_path)):
             logging.warn("Song is already in queue, will not add: " + song_path)   
@@ -753,6 +762,20 @@ class Karaoke:
             pass
         else:
             logging.debug("Resetting pygame screen...")
+            numdisplays = pygame.display.get_num_displays()
+            logging.info("numdisplay: "+str(numdisplays))
+            x = -1920
+            y = 0
+            # if numdisplays > 1 :
+            #     x = 0
+            #     y = 0
+            # else:
+            #     x = 1920
+            #     y = 0
+            
+            #vor pygame.init
+            #os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
+            #os.environ['SDL_VIDEO_WINDOW_POS'] = f"{x},{y}"
             pygame.display.quit()
             self.initialize_screen()
             self.render_splash_screen()
@@ -766,6 +789,8 @@ class Karaoke:
 
     def run(self):
         logging.info("Starting PiKaraoke!")
+        numdisplays = pygame.display.get_num_displays()
+        logging.info("numdisplays: "+ str(numdisplays))
         self.running = True
         while self.running:
             try:
