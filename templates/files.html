@@ -125,8 +125,10 @@
   <tr value='{{ song }}'>
     <td width="20px" style="padding: 5px 0px">{{loop.index + pagination.skip}}</td>
     <td id={{filename_from_path(song)[0].lower()}} width="20px" style="padding: 5px 0px">
+      {% if admin %}
       <a class='add-song-link has-text-weight-bold has-text-success' title="Add '{{filename_from_path(song)}}' to queue"
         href="{{url_for('enqueue')}}?song={{url_escape(song.encode('utf-8'))}}&user="><i class="icon icon-list-add"></i> </a>
+      {% endif %}
     </td>
     <td>
       {{filename_from_path(song)}}
