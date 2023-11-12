@@ -67,11 +67,16 @@ class VLCClient:
             "%s" % self.port,
             "--http-password",
             self.http_password,
-            "--no-embedded-video",
-            "--no-keyboard-events",
-            "--no-mouse-events",
-            "--mouse-hide-timeout",
-            "0",
+            #"--no-embedded-video",
+            #"--no-keyboard-events",
+            #"--no-mouse-events",
+            #"--mouse-hide-timeout",
+            #"0",
+            #"--volume=0", # mute for testing purposes --no-audio ist deaktiviert decoding 
+            #--mmdevice-volume=<float [0.000000 .. 1.250000]> 
+            #"--mmdevice-volume=0.0"
+            #--directx-volume=<float [0.000000 .. 2.000000]> 
+            #--waveout-volume=<float [0.000000 .. 2.000000]>
             "--video-on-top",
             "--no-video-title",
             "--mouse-hide-timeout",
