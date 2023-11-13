@@ -290,7 +290,7 @@ class Karaoke:
             
             # change splash window position to "leftmost screen"
             # needs to be set before pygame.init() or pygame.display.init() to have effect
-            os.environ['SDL_VIDEO_WINDOW_POS'] = f"0,0" #
+            os.environ['SDL_VIDEO_WINDOW_POS'] = f"-1920,0" #
 
             pygame.display.init()
             pygame.display.set_caption("pikaraoke")
