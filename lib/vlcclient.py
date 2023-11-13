@@ -59,7 +59,7 @@ class VLCClient:
         # Set up command line args
         self.cmd_base = [
             self.path,
-            "-f",
+            #"-f", #shorthand for fullscreen
             "--play-and-exit",
             "--extraintf",
             "http",
@@ -77,10 +77,19 @@ class VLCClient:
             #"--mmdevice-volume=0.0"
             #--directx-volume=<float [0.000000 .. 2.000000]> 
             #--waveout-volume=<float [0.000000 .. 2.000000]>
+            "--qt-fullscreen-screennumber=1",
+            #"--no-qt-fs-controller",
+            "--qt-start-minimized",
+            #"--directx-device=\\\\.\\DISPLAY1"
+            #"--no-autoscale",
+            #"--video-x=-1900 --video-y=1",
+            #"--width=800 --height=600", #broken in vlc3 fixed in vlc4 nightly but disregards --video-x
+            "--fullscreen",
+            #"--qt-start-minimized",
             "--video-on-top",
             "--no-video-title",
-            "--mouse-hide-timeout",
-            "0",
+            "--mouse-hide-timeout=0"
+            # Preferences > Interface > "Continue Playback ? | Wiedergabe Fortsetzen" Dropdown select "Nie" and SAVE
         ]
         if self.platform == "osx":
             self.cmd_base += [
@@ -162,7 +171,7 @@ class VLCClient:
                 command = self.cmd_base + [file_path]
             else:
                 command = self.cmd_base + additional_parameters + [file_path]
-            logging.debug("VLC Command: %s" % command)
+            logging.info("VLC Command: %s" % " ".join(command))
             self.process = subprocess.Popen(
                 command, shell=(self.platform == "windows"), stdin=subprocess.PIPE
             )
@@ -201,6 +210,8 @@ class VLCClient:
         self.is_transposing = True
         logging.debug("Transposing file...")
         self.play_file(file_path, params)
+        #time.sleep(2)
+        #self.fullscreen()
 
         # Prevent is_running() from returning False while we're transposing
         s = Timer(2.0, self.set_transposing_complete)
@@ -223,6 +234,9 @@ class VLCClient:
 
     def play(self):
         return self.command("pl_play")
+
+    def fullscreen(self):
+        return self.command("fullscreen")
 
     def stop(self):
         try:
