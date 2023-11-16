@@ -322,6 +322,7 @@
 
 {% block content %}
 
+{% if admin %}
 <div>
 <div class="box has-background-black-bis">
   <label for="songaddedbyglobal">Add song for </label>
@@ -548,5 +549,7 @@
   <hr>
 {% endfor %}
 {% endif %}
+
+{% endif %} {# Disable whole page if not admin #}
 
 {% endblock %}
