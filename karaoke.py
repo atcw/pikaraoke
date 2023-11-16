@@ -12,6 +12,7 @@ import time
 from io import BytesIO
 from pathlib import Path
 from subprocess import CalledProcessError, check_output
+import json
 
 import pygame
 import qrcode
@@ -44,6 +45,24 @@ class Karaoke:
     volume_offset = 0
     loop_interval = 500  # in milliseconds
     default_logo_path = os.path.join(base_path, "logo.png")
+
+
+    def get_script_path():
+        return os.path.dirname(os.path.realpath(sys.argv[0]))
+    
+    queue_dump_filename = os.path.join(get_script_path(), "queuebackup.json") 
+
+    def dump_queue(self):
+        with open(self.queue_dump_filename, 'w') as fout:
+            json.dump( self.queue , fout)
+    def load_queue(self):
+        logging.info("trying to load queue from " + self.queue_dump_filename)
+        if os.path.isfile(self.queue_dump_filename):
+            with open(self.queue_dump_filename, "r") as read_file:
+                queue = json.load(read_file)
+                self.queue = queue
+        else:
+            self.queue = []
 
     def __init__(
         self,
@@ -99,6 +118,8 @@ class Karaoke:
             datefmt="%Y-%m-%d %H:%M:%S",
             level=int(log_level),
         )
+
+        self.load_queue()
 
         logging.debug(
             """
@@ -607,6 +628,7 @@ class Karaoke:
         else:
             logging.info("'%s' is adding song to queue: %s" % (user, song_path))
             self.queue.append({"user": user, "file": song_path, "title": self.filename_from_path(song_path)})
+            self.dump_queue() #persistence
             return True
 
     def queue_add_random(self, amount):
@@ -622,6 +644,7 @@ class Karaoke:
                 logging.warn("Song already in queue, trying another... " + songs[r])
             else:
                 self.queue.append({"user": "Randomizer", "file": songs[r], "title": self.filename_from_path(songs[r])})
+                self.dump_queue() #persistence
                 i += 1
             songs.pop(r)
             if len(songs) == 0:
@@ -632,6 +655,7 @@ class Karaoke:
     def queue_clear(self):
         logging.info("Clearing queue!")
         self.queue = []
+        self.dump_queue() #persistence
         self.skip()
 
     def queue_edit(self, song_name, action):
@@ -654,6 +678,7 @@ class Karaoke:
                 logging.info("Bumping song up in queue: " + song["file"])
                 del self.queue[index]
                 self.queue.insert(index - 1, song)
+                self.dump_queue() #persistence
                 return True
         elif action == "down":
             if index == len(self.queue) - 1:
@@ -665,10 +690,12 @@ class Karaoke:
                 logging.info("Bumping song down in queue: " + song["file"])
                 del self.queue[index]
                 self.queue.insert(index + 1, song)
+                self.dump_queue() #persistence
                 return True
         elif action == "delete":
             logging.info("Deleting song from queue: " + song["file"])
             del self.queue[index]
+            self.dump_queue() #persistence
             return True
         else:
             logging.error("Unrecognized direction: " + action)
@@ -814,6 +841,7 @@ class Karaoke:
                         self.play_file(self.queue[0]["file"])
                         self.now_playing_user=self.queue[0]["user"]
                         self.queue.pop(0)
+                        self.dump_queue() #persistence
                 elif not pygame.display.get_active() and not self.is_file_playing():
                     self.pygame_reset_screen()
                 self.handle_run_loop()
