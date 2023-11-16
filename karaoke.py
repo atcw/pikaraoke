@@ -13,6 +13,8 @@ from io import BytesIO
 from pathlib import Path
 from subprocess import CalledProcessError, check_output
 import json
+import screeninfo
+
 
 import pygame
 import qrcode
@@ -311,7 +313,8 @@ class Karaoke:
             
             # change splash window position to "leftmost screen"
             # needs to be set before pygame.init() or pygame.display.init() to have effect
-            os.environ['SDL_VIDEO_WINDOW_POS'] = f"-1920,0" #
+            if len(screeninfo.get_monitors()) >= 2: # if second screen available
+                os.environ['SDL_VIDEO_WINDOW_POS'] = f"-1920,0" #
 
             pygame.display.init()
             pygame.display.set_caption("pikaraoke")
@@ -794,10 +797,10 @@ class Karaoke:
             pass
         else:
             logging.debug("Resetting pygame screen...")
-            numdisplays = pygame.display.get_num_displays()
-            logging.info("numdisplay: "+str(numdisplays))
-            x = -1920
-            y = 0
+            #numdisplays = pygame.display.get_num_displays()
+            #logging.info("numdisplay: "+str(numdisplays))
+            #x = -1920
+            #y = 0
             # if numdisplays > 1 :
             #     x = 0
             #     y = 0
