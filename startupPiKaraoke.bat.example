@@ -1,7 +1,29 @@
 cd cd /D "%~dp0"
+python --version 3>NUL
+if errorlevel 1 (
+    echo please install python3
+    goto waitforkeypress
+)
+
+IF NOT EXIST yt-dlp.exe (
+    echo please download yt-dlp.exe from 
+    goto waitforkeypress
+)
 yt-dlp.exe -U
+IF NOT EXIST ngrok.exe (
+    echo please download ngrok.exe from ngrok.com
+    goto waitforkeypress
+)
+
 start /min ngrok http 5555 --domain randomlygeneratedsubdomain.ngrok-free.app --basic-auth="kiwi:rocks"
+
 @echo off
 rem echo off -> dont show credentials on screen 
 python app.py --hide-ip --admin-password secretpassword --logo-path kiwikaraoke.png --splash-delay 5 --youtubedl-path %~dp0\yt-dlp.exe
 @echo on
+EXIT
+
+:waitforkeypress
+echo press any key to continue
+pause
+exit
