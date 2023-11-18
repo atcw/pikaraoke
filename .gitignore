@@ -6,3 +6,8 @@ songs/
 qrcode.png
 .DS_Store
 .venv/*
+ngrok.exe
+queuebackup.json*
+queuebackup.old.json
+yt-dlp.exe
+playhistory.txt
