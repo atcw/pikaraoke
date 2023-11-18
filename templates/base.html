@@ -42,27 +42,36 @@
     }
 
     notificationalreadyshownfor = ""
+    window.dontShowNextSongButton = false
+
     function nowPlayingEventHandlerForEveryPage(e) {
       
       obj = e.detail
       /* HOLD-Feature Play Next Song*/
       if (obj.up_next != null && obj.now_playing == null){
         // on hold
-        $(".nextsongbutton").removeClass("disabled")
-        $(".nextsongbutton").addClass("enabled")
 
-        /*
-        if ($("#notification-alt").is(":hidden") && notificationalreadyshownfor != obj.up_next){
-          notificationalreadyshownfor = obj.up_next
-          showNotification( "Up next: <b>" + sanitize(obj.up_next) + "</b><br> For: <b>" + sanitize( obj.next_user ) + "</b>", "is-warning", 10000)
+        if (!window.dontShowNextSongButton){ //used by search page to declutter UI
+          $(".nextsongbutton").addClass("enabled")
+          $(".nextsongbutton").removeClass("disabled")
+        }else{
+          if ($("#notification-alt").is(":hidden") && notificationalreadyshownfor != obj.up_next){
+            notificationalreadyshownfor = obj.up_next
+            showNotification( "<span>Up next: <b>" + sanitize(obj.up_next) + "</b><br> For: <b>" + sanitize( obj.next_user ) + "</b></span><br><span class='has-text-right'><button class='button is-warning inlinenextsongbutton' style='float:right'>🎤 Play Next Song</button></span>",
+             "is-success", 100000)
+            $(".inlinenextsongbutton").click(function(){
+              console.log("inlinenextsongbutton")
+              handleinlinenextsongbuttonclick()
+            })
+          }
+
         }
-        */
         
 
       }else if (obj.now_playing != null){
         // playing
-        $(".nextsongbutton").addClass("disabled")
         $(".nextsongbutton").removeClass("enabled")
+        $(".nextsongbutton").addClass("disabled")
       }else if(obj.up_next == null && obj.now_playing == null){
         // no queue after directly after start
         $(".nextsongbutton").addClass("disabled")
@@ -80,6 +89,37 @@
         const eventObj = new CustomEvent("nowplaying", { bubbles: true, detail: obj });
         document.body.dispatchEvent(eventObj)
       });
+    }
+    function handleinlinenextsongbuttonclick(){
+      fetch("{{ url_for('hold_trigger_continue') }}", {
+        method: "POST",
+        body: JSON.stringify({
+          
+        }),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8"
+        }
+      })
+      $("#notification-alt").hide()
+    }
+    function handlenextsongclick() {
+      if($(".nextsongbutton").hasClass("disabled")){
+        return
+      }
+      $(".nextsongbutton").addClass("disabled");
+      fetch("{{ url_for('hold_trigger_continue') }}", {
+        method: "POST",
+        body: JSON.stringify({
+          
+        }),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8"
+        }
+      }).then(()=>{
+        //setTimeout(()=>{$("#nextsongbutton").removeClass("disabled");},5000) //let getnowplaying() handle it
+        $("#notification-alt").hide()
+      });
+      
     }
 
     $(function () {
@@ -141,26 +181,7 @@
         location.reload();
       });
 
-
-      $("#nextsongbutton").click(function () {
-        if($("#nextsongbutton").hasClass("disabled")){
-          return
-        }
-        $("#nextsongbutton").addClass("disabled");
-        fetch("{{ url_for('hold_trigger_continue') }}", {
-          method: "POST",
-          body: JSON.stringify({
-            
-          }),
-          headers: {
-            "Content-type": "application/json; charset=UTF-8"
-          }
-        }).then(()=>{
-          //setTimeout(()=>{$("#nextsongbutton").removeClass("disabled");},5000) //let getnowplaying() handle it
-          $("#notification-alt").hide()
-        });
-        
-      })
+      $("#nextsongbutton").click(handlenextsongclick)
 
       getNowPlaying();
       setInterval(getNowPlaying, 1500);
@@ -286,7 +307,7 @@
   {% if admin %} {# hold continue trigger #}
   <style type="text/css">
     button.nextsongbutton i::after {
-      content: '\1F3A4'; display: block; /*🎤*/
+      content: '\1F3A4'; display: block; /*🎤 emoji-microphone*/
       font-size: 3.5rem; font-style: normal; font-weight: 600; color: green;
     }
     button.nextsongbutton {
