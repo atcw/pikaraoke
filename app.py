@@ -167,6 +167,12 @@ def queue_edit():
     else:
         song = request.args["song"]
         song = unquote(song)
+        if action == "top":
+            result = k.queue_edit(song, "top")
+            if result:
+                flash("Moved to top in queue: " + song, "is-success")
+            else:
+                flash("Error moving to top in queue: " + song, "is-danger")
         if action == "down":
             result = k.queue_edit(song, "down")
             if result:

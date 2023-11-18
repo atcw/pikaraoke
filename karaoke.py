@@ -14,7 +14,7 @@ from pathlib import Path
 from subprocess import CalledProcessError, check_output
 import json
 import screeninfo
-
+import datetime
 
 import pygame
 import qrcode
@@ -678,6 +678,16 @@ class Karaoke:
         if song == None:
             logging.error("Song not found in queue: " + song["file"])
             return False
+        if action == "top":
+            if index < 1:
+                logging.warn("Song is up next, can't bump up in queue: " + song["file"])
+                return False
+            else:
+                logging.info("Bumping song to top in queue: " + song["file"])
+                del self.queue[index]
+                self.queue.insert(0, song)
+                self.persist_queue() #persistence
+                return True
         if action == "up":
             if index < 1:
                 logging.warn("Song is up next, can't bump up in queue: " + song["file"])
@@ -868,6 +878,11 @@ class Karaoke:
                         
                         #TODO: persist queue after successful playthrough? or move it after .pop()?
                         #self.persist_queue() #persistence before .pop() to not loose current track
+
+                        # play history
+
+                        with open("playhistory.txt", "a", encoding='utf-8') as playhistory:
+                            playhistory.write(str(datetime.datetime.now())+"\t"+self.queue[0]["title"])
 
                         self.play_file(self.queue[0]["file"])
                         self.now_playing_user=self.queue[0]["user"]

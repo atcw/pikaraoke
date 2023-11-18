@@ -22,10 +22,64 @@
     function showNotification(message, categoryClass, timeout=3000) {
       console.log("Showing notification")
       $("#notification-alt").addClass(categoryClass)
-      $("#notification-alt div").text(message)
+      $("#notification-alt div").html(message)
       $("#notification-alt").fadeIn()
       setTimeout(function () {$("#notification-alt").fadeOut()}, timeout)
       setTimeout(function () {$("#notification-alt").removeClass(categoryClass)}, timeout + 750)
+    }
+
+    function sanitize(string) {
+      const map = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#x27;',
+          "/": '&#x2F;',
+      };
+      const reg = /[&<>"'/]/ig;
+      return string.replace(reg, (match)=>(map[match]));
+    }
+
+    notificationalreadyshownfor = ""
+    function nowPlayingEventHandlerForEveryPage(e) {
+      
+      obj = e.detail
+      /* HOLD-Feature Play Next Song*/
+      if (obj.up_next != null && obj.now_playing == null){
+        // on hold
+        $(".nextsongbutton").removeClass("disabled")
+        $(".nextsongbutton").addClass("enabled")
+
+        /*
+        if ($("#notification-alt").is(":hidden") && notificationalreadyshownfor != obj.up_next){
+          notificationalreadyshownfor = obj.up_next
+          showNotification( "Up next: <b>" + sanitize(obj.up_next) + "</b><br> For: <b>" + sanitize( obj.next_user ) + "</b>", "is-warning", 10000)
+        }
+        */
+        
+
+      }else if (obj.now_playing != null){
+        // playing
+        $(".nextsongbutton").addClass("disabled")
+        $(".nextsongbutton").removeClass("enabled")
+      }else if(obj.up_next == null && obj.now_playing == null){
+        // no queue after directly after start
+        $(".nextsongbutton").addClass("disabled")
+        $(".nextsongbutton").removeClass("enabled")
+      }
+
+
+    }
+  
+    document.addEventListener("nowplaying", nowPlayingEventHandlerForEveryPage);
+  
+    function getNowPlaying() {
+      $.get('{{ url_for("nowplaying") }}', function (data) {
+        var obj = JSON.parse(data);
+        const eventObj = new CustomEvent("nowplaying", { bubbles: true, detail: obj });
+        document.body.dispatchEvent(eventObj)
+      });
     }
 
     $(function () {
@@ -86,6 +140,30 @@
         }
         location.reload();
       });
+
+
+      $("#nextsongbutton").click(function () {
+        if($("#nextsongbutton").hasClass("disabled")){
+          return
+        }
+        $("#nextsongbutton").addClass("disabled");
+        fetch("{{ url_for('hold_trigger_continue') }}", {
+          method: "POST",
+          body: JSON.stringify({
+            
+          }),
+          headers: {
+            "Content-type": "application/json; charset=UTF-8"
+          }
+        }).then(()=>{
+          //setTimeout(()=>{$("#nextsongbutton").removeClass("disabled");},5000) //let getnowplaying() handle it
+          $("#notification-alt").hide()
+        });
+        
+      })
+
+      getNowPlaying();
+      setInterval(getNowPlaying, 1500);
 
     });
   </script>
@@ -205,6 +283,89 @@
   </div>
   {% endif %}
 
+  {% if admin %} {# hold continue trigger #}
+  <style type="text/css">
+    button.nextsongbutton i::after {
+      content: '\1F3A4'; display: block; /*🎤*/
+      font-size: 3.5rem; font-style: normal; font-weight: 600; color: green;
+    }
+    button.nextsongbutton {
+      background-color: #f1b70e;
+      border-color: transparent;
+      color: #fff;
+    }
+    button.nextsongbutton {
+      border-width: 2px;
+      cursor: pointer;
+      padding: 0.75em 0.75em;
+      border-radius: 0.4em;
+      font-size: larger; font-style: normal; font-weight: 600; color: whitesmoke;
+    }
+    button.nextsongbutton.disabled{
+      background-color: #eee;
+    }
+    button.nextsongbutton div {
+      margin-top: 1em;
+    }
+
+
+    .pulse.enabled {
+      animation: pulse-animation 1s infinite;
+    }
+    
+    @keyframes pulse-animation {
+      0% {
+        box-shadow: 0 0 0 0px #ffffff00;
+      }
+      100% {
+        box-shadow: 0 0 0 20px #ffffff1a;
+      }
+    }
+
+    .nextsongbutton{
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+    }
+
+    @media screen and (max-width: 768px) {
+      .nextsongbutton{
+        position: fixed;
+        /*bottom: 30vh;*/
+        bottom: 40px;
+        right: 40px;
+        padding: 0.5em 0.5em;
+        font-size: 0.5em !important;
+      }  
+      button.nextsongbutton div {
+        margin-top: 0.5em !important;
+        font-size: 1.3em !important;
+      }
+    }
+
+    .nextsongbutton.disabled {
+      position: fixed;
+      bottom: -100%;
+
+    }
+    .nextsongbutton {
+      -webkit-transition: bottom;
+      -webkit-transition-duration: 2s;
+      -webkit-transition-timing-function: ease-in;
+
+      transition: bottom;
+      transition-duration: 2s;
+      transition-timing-function: ease-in;
+    }
+
+  </style>
+  <div class="nextsongcontainer">
+    <button class="pulse nextsongbutton disabled" id="nextsongbutton">
+      <i></i>
+      <div>Play next Song</div>
+    </button>
+  </div>
+{% endif %}
 
   {% block body %}
   {% endblock %}
