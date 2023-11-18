@@ -1,6 +1,6 @@
 cd cd /D "%~dp0"
 yt-dlp.exe -U
-start /min ngrok http 5555 --domain randomlygeneratedsubdomain.ngrok-free.app
+start /min ngrok http 5555 --domain randomlygeneratedsubdomain.ngrok-free.app --basic-auth="kiwi:rocks"
 @echo off
 rem echo off -> dont show credentials on screen 
 python app.py --hide-ip --admin-password secretpassword --logo-path kiwikaraoke.png --splash-delay 5 --youtubedl-path %~dp0\yt-dlp.exe
