@@ -32,6 +32,32 @@
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
   }
+
+  span.deleteicon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  span.deleteicon span {
+      position: absolute;
+      display: block;
+      right: 3px;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      color: #fff;
+      background-color: #ccc;
+      font: 13px monospace;
+      text-align: center;
+      line-height: 1em;
+      cursor: pointer;
+  }
+  span.deleteicon input {
+      padding-right: 18px;
+      box-sizing: border-box;
+  }
+
+
 </style>
 <script>
   $(function () {
@@ -166,7 +192,7 @@
 
     $('#clear-search').on('click', function (e) {
       e.preventDefault();
-      $("#song-to-add-selectized").val("");
+      $("#song-to-add-selectized").val("").focus();
     });
 
     $('#search-link').on('click', function (e) {
@@ -325,8 +351,11 @@
 {% if admin %}
 <div>
 <div class="box has-background-black-bis">
-  <label for="songaddedbyglobal">Add song for </label>
-    <input class="song-added-by" id="songaddedbyglobal" type="text" name="song-added-by" placeholder="Enter Karaoke Singer here" />
+  <label for="songaddedbyglobal">Add song for </label> &nbsp;
+    <span class="deleteicon">
+      <input class="song-added-by" id="songaddedbyglobal" type="text" name="song-added-by" placeholder="Enter Karaoke Singer here" />
+      <span onclick="var input = this.previousElementSibling; input.value = ''; input.focus();">x</span>
+  </span>
   </div>
 
   <div id="container_queue_form" class="box has-background-black-bis">
