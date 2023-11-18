@@ -19,7 +19,7 @@ start /min ngrok http 5555 --domain randomlygeneratedsubdomain.ngrok-free.app --
 
 @echo off
 rem echo off -> dont show credentials on screen 
-python app.py --hide-ip --admin-password secretpassword --logo-path kiwikaraoke.png --splash-delay 5 --youtubedl-path %~dp0\yt-dlp.exe
+python app.py --hold-queue --hide-ip --admin-password secretpassword --logo-path kiwikaraoke.png --splash-delay 5 --youtubedl-path %~dp0\yt-dlp.exe
 @echo on
 EXIT
 
