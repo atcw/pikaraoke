@@ -31,6 +31,18 @@
         $(".control-box").hide();
       }
 
+      /* Hold-Feature*/
+      if (obj.up_next != null && obj.now_playing == null){
+        // on hold
+        $(".nextsongbutton").removeClass("disabled")
+      }else if (obj.now_playing != null){
+        // playing
+        $(".nextsongbutton").addClass("disabled")
+      }else if(obj.up_next == null && obj.now_playing == null){
+        // no queue after directly after start
+        $(".nextsongbutton").addClass("disabled")
+      }
+      
       if (obj.up_next) {
         $("#up-next").html(`<p style="margin-bottom: 5px">${obj.up_next}</p>
             <p class="has-text-success">
@@ -135,6 +147,25 @@
       }
     }
 
+    $("#nextsongbutton").click(function () {
+      if($("#nextsongbutton").hasClass("disabled")){
+        return
+      }
+      $("#nextsongbutton").addClass("disabled");
+      fetch("{{ url_for('hold_trigger_continue') }}", {
+        method: "POST",
+        body: JSON.stringify({
+          
+        }),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8"
+        }
+      }).then(()=>{
+        //setTimeout(()=>{$("#nextsongbutton").removeClass("disabled");},5000) //let getnowplaying() handle it
+      });
+      
+    })
+
     getNowPlaying();
     setInterval(getNowPlaying, 1500);
   });
@@ -154,11 +185,69 @@
 <p class="is-size-4 has-text-warning" id="now-playing"></p>
 
 <hr />
+
+{% if admin %}
+<div style="float: right;" class="nextsongcontainer clearfix">
+  <style type="text/css" scoped>
+    button.nextsongbutton i::after {
+      content: '\1F3A4'; display: block; /*🎤*/
+      font-size: 10vh; font-style: normal; font-weight: 600; color: green;
+    }
+    button.nextsongbutton {
+      background-color: #f1b70e;
+      border-color: transparent;
+      color: #fff;
+    }
+    button {
+      border-width: 2px;
+      cursor: pointer;
+      padding: 0.75em 0.75em;
+      border-radius: 0.4em;
+      font-size: larger; font-style: normal; font-weight: 600; color: whitesmoke;
+    }
+    button.disabled{
+      background-color: #eee;
+    }
+    button div {
+      margin-top: 1em;
+    }
+
+    button {
+      /* box-shadow: 0px 0px 1px 1px #0000001a; */
+    }
+
+    .pulse:not(.disabled) {
+      animation: pulse-animation 1s infinite;
+    }
+    
+    @keyframes pulse-animation {
+      0% {
+        box-shadow: 0 0 0 0px #ffffff00;
+      }
+      100% {
+        box-shadow: 0 0 0 20px #ffffff1a;
+      }
+    }
+  </style>
+  <button class="pulse nextsongbutton" id="nextsongbutton">
+    <i></i>
+    <div>Play next Song</div>
+  </button>
+</div>
+{% endif %}
+
 <h3>
   {# MSG: Title for the section displaying the next song to be played. #} {%
   trans %}Next Song{% endtrans %}
 </h3>
 <p id="up-next" class="has-text-warning"></p>
+
+
+<!-- <div class="control has-text-right"> -->
+<!-- <span class="is-pulled-right">
+  <a href="{{ url_for('hold_trigger_continue') }}" class="button is-warning"><span class="icon icon-mic-1"></span><span class="icon icon-play" style="font-size:large">🎵🎶🎼♪♫⏩⏺▶🎙🎤👍</span><br/>Play queued Song</a>
+</span> -->
+<!-- </div> -->
 <hr />
 
 {% if admin %}

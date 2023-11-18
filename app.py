@@ -208,6 +208,10 @@ def enqueue():
     #return redirect(url_for("home"))
     return json.dumps({"song": song_title, "success": rc })
 
+@app.route("/hold_trigger_continue",methods=['GET', 'POST'])
+def hold_trigger_continue():
+    k.hold_continue_trigger()
+    return redirect(url_for("home"))
 
 @app.route("/skip")
 def skip():

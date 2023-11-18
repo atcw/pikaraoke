@@ -48,13 +48,18 @@ class Karaoke:
     loop_interval = 500  # in milliseconds
     default_logo_path = os.path.join(base_path, "logo.png")
 
+    hold_enabled = True
+    hold_continue_triggered = False
 
     def get_script_path():
         return os.path.dirname(os.path.realpath(sys.argv[0]))
     
     queue_dump_filename = os.path.join(get_script_path(), "queuebackup.json") 
 
-    def dump_queue(self):
+    def persist_queue(self):
+        
+
+        #TODO:cycle backupfile / move old queue-dump before overwriting
         with open(self.queue_dump_filename, 'w') as fout:
             json.dump( self.queue , fout)
     def load_queue(self):
@@ -631,7 +636,7 @@ class Karaoke:
         else:
             logging.info("'%s' is adding song to queue: %s" % (user, song_path))
             self.queue.append({"user": user, "file": song_path, "title": self.filename_from_path(song_path)})
-            self.dump_queue() #persistence
+            self.persist_queue() #persistence
             return True
 
     def queue_add_random(self, amount):
@@ -647,7 +652,7 @@ class Karaoke:
                 logging.warn("Song already in queue, trying another... " + songs[r])
             else:
                 self.queue.append({"user": "Randomizer", "file": songs[r], "title": self.filename_from_path(songs[r])})
-                self.dump_queue() #persistence
+                self.persist_queue() #persistence
                 i += 1
             songs.pop(r)
             if len(songs) == 0:
@@ -658,7 +663,7 @@ class Karaoke:
     def queue_clear(self):
         logging.info("Clearing queue!")
         self.queue = []
-        self.dump_queue() #persistence
+        self.persist_queue() #persistence
         self.skip()
 
     def queue_edit(self, song_name, action):
@@ -681,7 +686,7 @@ class Karaoke:
                 logging.info("Bumping song up in queue: " + song["file"])
                 del self.queue[index]
                 self.queue.insert(index - 1, song)
-                self.dump_queue() #persistence
+                self.persist_queue() #persistence
                 return True
         elif action == "down":
             if index == len(self.queue) - 1:
@@ -693,12 +698,12 @@ class Karaoke:
                 logging.info("Bumping song down in queue: " + song["file"])
                 del self.queue[index]
                 self.queue.insert(index + 1, song)
-                self.dump_queue() #persistence
+                self.persist_queue() #persistence
                 return True
         elif action == "delete":
             logging.info("Deleting song from queue: " + song["file"])
             del self.queue[index]
-            self.dump_queue() #persistence
+            self.persist_queue() #persistence
             return True
         else:
             logging.error("Unrecognized direction: " + action)
@@ -821,6 +826,14 @@ class Karaoke:
         self.now_playing_user = None
         self.is_paused = True
         self.now_playing_transpose = 0
+    
+    def hold_continue_trigger(self):
+        if not self.now_playing:
+            self.hold_continue_triggered = True
+    def hold_enable(self):
+        self.hold_enabled = True
+    def hold_disable(self):
+        self.hold_enabled = False
 
     def run(self):
         logging.info("Starting PiKaraoke!")
@@ -831,22 +844,40 @@ class Karaoke:
             try:
                 if not self.is_file_playing() and self.now_playing != None:
                     self.reset_now_playing()
+                #if self.is_file_playing():
+                #    self.hold_continue_triggeredhold = False # No triggering before end of song
                 if len(self.queue) > 0:
                     if not self.is_file_playing():
                         self.reset_now_playing()
+                        #self.persist_queue() # persist after stop
                         if not pygame.display.get_active():
                             self.pygame_reset_screen()
                         self.render_next_song_to_splash_screen()
                         i = 0
-                        while i < (self.splash_delay * 1000):
+                        
+                        #TODO   repaint on not pygame.display.get_active() while in loop
+                        docontinue = False
+                        while (i < (self.splash_delay * 1000) and not self.hold_enabled) or (self.hold_enabled and not docontinue):
                             self.handle_run_loop()
+                            self.render_next_song_to_splash_screen() # otherwise blur will trigger reset and result in blank screen
                             i += self.loop_interval
+                            if self.hold_continue_triggered:
+                                if self.hold_enabled:
+                                    self.hold_continue_triggered = False
+                                docontinue = True
+                        
+                        #TODO: persist queue after successful playthrough? or move it after .pop()?
+                        #self.persist_queue() #persistence before .pop() to not loose current track
+
                         self.play_file(self.queue[0]["file"])
                         self.now_playing_user=self.queue[0]["user"]
                         self.queue.pop(0)
-                        self.dump_queue() #persistence
+
+                        self.persist_queue() #persistence after .pop() to make life easier but loses current song
+                        
                 elif not pygame.display.get_active() and not self.is_file_playing():
                     self.pygame_reset_screen()
+
                 self.handle_run_loop()
             except KeyboardInterrupt:
                 logging.warn("Keyboard interrupt: Exiting pikaraoke...")
