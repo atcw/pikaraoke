@@ -21,6 +21,8 @@ import pygame
 import qrcode
 from unidecode import unidecode
 
+from lib import textrect
+
 from lib import omxclient, vlcclient
 from lib.get_platform import get_platform
 
@@ -448,18 +450,30 @@ class Karaoke:
                 if (len(next_song) > max_length):
                     next_song = next_song[0:max_length] + "..."
                 next_user = self.queue[0]["user"]
-                font_next_song = pygame.font.SysFont(pygame.font.get_default_font(), 60)
+                font_next_song = pygame.font.SysFont(pygame.font.get_default_font(), 80)
                 text = font_next_song.render(
                     "Up next: %s" % (unidecode(next_song)), True, (0, 128, 0)
                 )
                 up_next = font_next_song.render("Up next:  " , True, (255, 255, 0))
+
+                margin = 50
+
+                my_rect = pygame.Rect((40, 40, self.screen.get_width()*(3/4)-margin, 300))
+                my_rect.topright = (self.screen.get_width()-margin,margin)
+                
+                rendered_text, actual_height = textrect.render_textrect(unidecode(next_song), font_next_song, my_rect, (0, 128, 0), (48, 48, 48), 2)
+                
+                if rendered_text:
+                    self.screen.blit(rendered_text, my_rect.topleft)
+
                 font_user_name = pygame.font.SysFont(pygame.font.get_default_font(), 50)
                 user_name = font_user_name.render("Added by: %s " % next_user, True, (255, 120, 0))
-                x = self.width - text.get_width() - 10
+                x = self.width - text.get_width() - margin
                 y = 5
-                self.screen.blit(text, (x, y))
-                self.screen.blit(up_next, (x, y))
-                self.screen.blit(user_name, (self.width - user_name.get_width() - 10, y + 50))
+                #self.screen.blit(text, (x, y))
+                
+                self.screen.blit(up_next, (margin, margin))
+                self.screen.blit(user_name, (self.width - user_name.get_width() - margin, actual_height + 100))
                 return True
             else:
                 logging.debug("Could not render next song to splash. No song in queue")
@@ -874,12 +888,17 @@ class Karaoke:
                         docontinue = False
                         while (i < (self.splash_delay * 1000) and not self.hold_enabled) or (self.hold_enabled and not docontinue):
                             self.handle_run_loop()
+                            if not self.running:
+                                break
                             self.render_next_song_to_splash_screen() # otherwise blur will trigger reset and result in blank screen
                             i += self.loop_interval
                             if self.hold_continue_triggered:
                                 if self.hold_enabled:
                                     self.hold_continue_triggered = False
                                 docontinue = True
+                        
+                        if not self.running: # exit "thread" before starting playback if killed externally
+                                break
                         
                         #TODO: persist queue after successful playthrough? or move it after .pop()?
                         #self.persist_queue() #persistence before .pop() to not loose current track
