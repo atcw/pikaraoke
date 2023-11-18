@@ -755,9 +755,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--hide-ip",
         action="store_true",
-        help="Hide IP address from the screen.",
+        help="Hide IP address and QR-Code from the screen.",
         required=False,
     )
+    parser.add_argument(
+        "--hold-queue",
+        action="store_true",
+        help="Hold Playback after every song disregarding splash-interval",
+        required=False,
+    ),
     parser.add_argument(
         "--hide-raspiwifi-instructions",
         action="store_true",
@@ -889,6 +895,7 @@ if __name__ == "__main__":
         log_level=args.log_level,
         volume=args.volume,
         hide_ip=args.hide_ip,
+        hold_queue=args.hold_queue,
         hide_raspiwifi_instructions=args.hide_raspiwifi_instructions,
         hide_splash_screen=args.hide_splash_screen,
         omxplayer_adev=args.adev,

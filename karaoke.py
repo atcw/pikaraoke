@@ -14,7 +14,8 @@ from pathlib import Path
 from subprocess import CalledProcessError, check_output
 import json
 import screeninfo
-import datetime
+#import datetime
+from datetime import datetime
 import shutil
 
 import pygame
@@ -50,8 +51,8 @@ class Karaoke:
     volume_offset = 0
     loop_interval = 500  # in milliseconds
     default_logo_path = os.path.join(base_path, "logo.png")
-
-    hold_enabled = True
+    
+    hold_queue = False
     hold_continue_triggered = False
 
     def get_script_path(self):
@@ -67,6 +68,9 @@ class Karaoke:
         if(os.path.isfile(self.queue_dump_filename())):
             shutil.move(self.queue_dump_filename(),  os.path.join(self.get_script_path(),"queuebackup.old.json"))
         with open(self.queue_dump_filename(), 'w') as fout:
+            json.dump( self.queue , fout)
+        # timestamped backups
+        with open(self.queue_dump_filename() + datetime.now().strftime("%Y_%m_%d-%H_%M_%S")+".json", 'w') as fout:
             json.dump( self.queue , fout)
 
     def load_queue(self):
@@ -85,6 +89,7 @@ class Karaoke:
         hide_ip=False,
         hide_raspiwifi_instructions=False,
         hide_splash_screen=False,
+        hold_queue=False,
         omxplayer_adev="both",
         dual_screen=False,
         high_quality=False,
@@ -106,6 +111,7 @@ class Karaoke:
         self.hide_ip = hide_ip
         self.hide_raspiwifi_instructions = hide_raspiwifi_instructions
         self.hide_splash_screen = hide_splash_screen
+        self.hold_queue = hold_queue
         self.omxplayer_adev = omxplayer_adev
         self.download_path = download_path
         self.dual_screen = dual_screen
@@ -141,6 +147,7 @@ class Karaoke:
     hide IP: %s
     hide RaspiWiFi instructions: %s,
     hide splash: %s
+    hold queue: %s
     splash_delay: %s
     omx audio device: %s
     dual screen: %s
@@ -161,6 +168,7 @@ class Karaoke:
                 self.hide_ip,
                 self.hide_raspiwifi_instructions,
                 self.hide_splash_screen,
+                self.hold_queue,
                 self.splash_delay,
                 self.omxplayer_adev,
                 self.dual_screen,
@@ -860,9 +868,9 @@ class Karaoke:
         if not self.now_playing:
             self.hold_continue_triggered = True
     def hold_enable(self):
-        self.hold_enabled = True
+        self.hold_queue = True
     def hold_disable(self):
-        self.hold_enabled = False
+        self.hold_queue = False
 
     def run(self):
         logging.info("Starting PiKaraoke!")
@@ -886,14 +894,14 @@ class Karaoke:
                         
                         #TODO   repaint on not pygame.display.get_active() while in loop
                         docontinue = False
-                        while (i < (self.splash_delay * 1000) and not self.hold_enabled) or (self.hold_enabled and not docontinue):
+                        while (i < (self.splash_delay * 1000) and not self.hold_queue) or (self.hold_queue and not docontinue):
                             self.handle_run_loop()
                             if not self.running:
                                 break
                             self.render_next_song_to_splash_screen() # otherwise blur will trigger reset and result in blank screen
                             i += self.loop_interval
                             if self.hold_continue_triggered:
-                                if self.hold_enabled:
+                                if self.hold_queue:
                                     self.hold_continue_triggered = False
                                 docontinue = True
                         
@@ -904,9 +912,8 @@ class Karaoke:
                         #self.persist_queue() #persistence before .pop() to not loose current track
 
                         # play history
-
                         with open("playhistory.txt", "a", encoding='utf-8') as playhistory:
-                            playhistory.write(str(datetime.datetime.now())+"\t"+self.queue[0]["title"])
+                            playhistory.write(str(datetime.now())+"\t"+self.queue[0]["title"])
 
                         self.play_file(self.queue[0]["file"])
                         self.now_playing_user=self.queue[0]["user"]

@@ -80,6 +80,7 @@ class VLCClient:
             "--qt-fullscreen-screennumber=1",
             #"--no-qt-fs-controller",
             "--qt-start-minimized",
+            "--qt-notification=0", # "Show notification popup on track change"
             #"--directx-device=\\\\.\\DISPLAY1"
             #"--no-autoscale",
             #"--video-x=-1900 --video-y=1",
@@ -90,6 +91,7 @@ class VLCClient:
             "--no-video-title",
             "--mouse-hide-timeout=0"
             # Preferences > Interface > "Continue Playback ? | Wiedergabe Fortsetzen" Dropdown select "Nie" and SAVE
+
         ]
         if self.platform == "osx":
             self.cmd_base += [
