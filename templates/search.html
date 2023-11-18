@@ -361,9 +361,8 @@
   </div>
 
   <div id="container_queue_form" class="box has-background-black-bis">
-
-
     <h1> Search </h1>
+    <!-- <div class="has-text-left" style="font-size:smaller;color:#ccc; margin: 0.5em 0 0.5em;">Select downloaded via Menu</div> -->
     <form id="queue-form" >
       <div id="search-field" class="field has-addons" style="margin-bottom: 5px">
         <div class="control" style="width:100%">
@@ -380,9 +379,10 @@
         </div>
         <input class="song-added-by" type="hidden" name="song-added-by" />
       </div>
-      <div class="control has-text-right">
+      
+      <div class="control has-text-right" >
         
-          <label class="checkbox">
+          <label class="checkbox" for="include-non-karaoke">
             <input type="checkbox" id="include-non-karaoke" name="include-non-karaoke">
             
             {# MSG: Checkbox label which enables matching songs which are not karaoke versions
@@ -427,17 +427,17 @@
     <div id="advanced-settings" class="box has-background-black-bis" style="margin-top: 10px">
       <div class="control">
         <div class="label">
-          {# MSG: Label for an input which takes a YouTube url directly instead of searching titles. #}
-          {% trans %}Directly add via YouTube url:{% endtrans %}
+          {# MSG: Label for an input which takes a YouTube URL directly instead of searching titles. #}
+          {% trans %}Add via YouTube URL:{% endtrans %}
         </div>
         <form  action="{{ url_for('download') }}" method="post">
           <input class="input" id="direct-download-url" type="text" name="song-url" />
           <input class="song-added-by" type="hidden" name="song-added-by" />
           <div class="field" style="margin-top: 5px">
-            <label class="checkbox">
-              <input type="checkbox" checked name="queue">
+            <label class="checkbox" for="directdownloadtoqueue">
+              <input type="checkbox" checked name="queue" id="directdownloadtoqueue">
               {# MSG: Checkbox label which marks the song to be added to the queue after it finishes downloading. #}
-              {% trans %}Add direct download to queue once downloaded{% endtrans %}
+              {% trans %}Add to queue once downloaded{% endtrans %}
             </label>
           </div>
           <div class="has-text-right" style="margin-top: 5px">
