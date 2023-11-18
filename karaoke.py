@@ -15,6 +15,7 @@ from subprocess import CalledProcessError, check_output
 import json
 import screeninfo
 import datetime
+import shutil
 
 import pygame
 import qrcode
@@ -51,21 +52,25 @@ class Karaoke:
     hold_enabled = True
     hold_continue_triggered = False
 
-    def get_script_path():
+    def get_script_path(self):
         return os.path.dirname(os.path.realpath(sys.argv[0]))
     
-    queue_dump_filename = os.path.join(get_script_path(), "queuebackup.json") 
+    def queue_dump_filename(self):
+        return os.path.join(self.get_script_path(), "queuebackup.json") 
 
     def persist_queue(self):
         
-
         #TODO:cycle backupfile / move old queue-dump before overwriting
-        with open(self.queue_dump_filename, 'w') as fout:
+        
+        if(os.path.isfile(self.queue_dump_filename())):
+            shutil.move(self.queue_dump_filename(),  os.path.join(self.get_script_path(),"queuebackup.old.json"))
+        with open(self.queue_dump_filename(), 'w') as fout:
             json.dump( self.queue , fout)
+
     def load_queue(self):
-        logging.info("trying to load queue from " + self.queue_dump_filename)
-        if os.path.isfile(self.queue_dump_filename):
-            with open(self.queue_dump_filename, "r") as read_file:
+        logging.info("trying to load queue from " + self.queue_dump_filename())
+        if os.path.isfile(self.queue_dump_filename()):
+            with open(self.queue_dump_filename(), "r") as read_file:
                 queue = json.load(read_file)
                 self.queue = queue
         else:
