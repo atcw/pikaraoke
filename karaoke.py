@@ -467,7 +467,7 @@ class Karaoke:
                     self.screen.blit(rendered_text, my_rect.topleft)
 
                 font_user_name = pygame.font.SysFont(pygame.font.get_default_font(), 50)
-                user_name = font_user_name.render("Added by: %s " % next_user, True, (255, 120, 0))
+                user_name = font_user_name.render("Singer: %s " % next_user, True, (255, 120, 0))
                 x = self.width - text.get_width() - margin
                 y = 5
                 #self.screen.blit(text, (x, y))
