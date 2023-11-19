@@ -4,9 +4,9 @@
   table a {
     display: inline-block;
     position: relative;
-    z-index: 1;
-    padding: 2em;
-    margin: -2em;
+    
+    padding: 0.1em;
+    margin: 0;
   }
 </style>
 <script>
@@ -33,8 +33,7 @@
             <td width="20px" style="padding: 5px 0px">${index + 1}</td>
             {% if admin %}
             <td width="20px" style="padding: 5px 0px">
-              <a
-                class="up-button"
+              <a class="totop-button"
                 href="/queue/edit?action=top&song=${encodeURIComponent(e.file)}"
                 title="Move to top in queue"
                 ><span class="icon ${index == 0 && "is-hidden"}">⏫</span>
@@ -90,6 +89,12 @@
         $.get(this.href, function (data) {})
         getQueue();
       }
+  });
+
+  $(document).on('click', '.totop-button', function (e) {
+    e.preventDefault();
+    $.get(this.href, function (data) {})
+    getQueue();
   });
 
   $(document).on('click', '.up-button', function (e) {
