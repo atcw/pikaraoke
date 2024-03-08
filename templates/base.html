@@ -19,6 +19,18 @@
 
   <script>
 
+    function autoplaychanged(e){
+      fetch("{{ url_for('autoplaySet') }}", {
+        method: "POST",
+        body: JSON.stringify({
+          autoplaySet: this.checked
+        }),
+        headers: {
+          "Content-type": "application/json; charset=UTF-8"
+        }
+      })
+    }
+
     function showNotification(message, categoryClass, timeout=3000) {
       console.log("Showing notification")
       $("#notification-alt").addClass(categoryClass)

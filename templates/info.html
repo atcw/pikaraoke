@@ -1,6 +1,10 @@
 {% extends 'base.html' %} {% block scripts %}
 <script>
   $(function () {
+
+    $("#autoplaycheckbox").change(autoplaychanged)
+
+
     $("#quit-link").click(function (e) {
       e.preventDefault();
       // {# MSG: Confirmation text whe the user selects quit. #}
@@ -48,7 +52,12 @@
 </script>
 {% endblock %}
 
+
+
+
 {% block header %}
+
+
   <h1>{% block title %}
     {# MSG: Title of the information page. #}
     {% trans %}Information{% endtrans %}
@@ -56,6 +65,13 @@
 {% endblock %}
 
 {% block content %}
+<form>
+  <input type="checkbox" name="autoplayenabled" id="autoplaycheckbox"   {{ "checked" if autoplayenabled  }}  >
+  <label for="autoplaycheckbox">Autoplay</label><br>
+  {{ "Autoplay enabled" if autoplayenabled  }}
+  {{ "Autoplay Disabled" if not autoplayenabled  }}
+</form>
+
 <hr/>
 
 <div class="has-text-centered">  
@@ -75,6 +91,7 @@
   </div>
 
 <hr />
+
 
 {# MSG: Header of the information section about the computer running Pikaraoke. #}
 <h1>{% trans %}System Info{% endtrans %}</h1>

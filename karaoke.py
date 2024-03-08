@@ -900,9 +900,11 @@ class Karaoke:
                                 break
                             self.render_next_song_to_splash_screen() # otherwise blur will trigger reset and result in blank screen
                             i += self.loop_interval
-                            if self.hold_continue_triggered:
-                                if self.hold_queue:
+                            if self.hold_queue:
+                                if self.hold_continue_triggered:
                                     self.hold_continue_triggered = False
+                                    docontinue = True
+                            else:
                                 docontinue = True
                         
                         if not self.running: # exit "thread" before starting playback if killed externally

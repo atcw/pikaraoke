@@ -549,7 +549,8 @@ def info():
         is_pi=is_pi,
         pikaraoke_version=VERSION,
         admin=is_admin(),
-        admin_enabled=admin_password != None
+        admin_enabled=admin_password != None,
+        autoplayenabled = not k.hold_queue
     )
 
 
@@ -617,7 +618,6 @@ def shutdown():
         flash("You don't have permission to shut down", "is-danger")
     return redirect(url_for("home"))
 
-
 @app.route("/reboot")
 def reboot():
     if (is_admin()): 
@@ -638,6 +638,27 @@ def expand_fs():
         flash("Cannot expand fs on non-raspberry pi devices!", "is-danger")
     else:
         flash("You don't have permission to resize the filesystem", "is-danger")
+    return redirect(url_for("home"))
+
+@app.route("/autoplaySet", methods=["GET", "POST"])
+def autoplaySet():
+    logging.info("autoplay")
+    d = request.get_json()
+    #d = request.form.to_dict()
+    #q = request.args.get('set')
+    print(d)
+    action = ""
+    if "autoplaySet" in d :
+        action = d["autoplaySet"]
+        logging.info("Action: %s - %s", str(action),type(action))
+    if action == True:
+        k.hold_queue  = False
+        logging.info("Autoplay Enabled")
+        # k.hold_continue_triggered = True
+    elif action == False:
+        k.hold_queue  = True
+        logging.info("Autoplay Disabled")
+    
     return redirect(url_for("home"))
 
 
@@ -663,6 +684,7 @@ def get_default_youtube_dl_path(platform):
     else:
         return default_ytdl_unix_path
         
+
 
 def get_default_dl_dir(platform):
     if platform == "raspberry_pi":
