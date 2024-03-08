@@ -1,3 +1,20 @@
+# KiwiKaraoke Fork
+## Goals 
+ - Dual head setup on Windows with one screen showing video and splash and the other one for the Browser UI showing the queue
+ - no controls without admin for a semi public bar environment where people might have access
+## Changes from pikaraoke
+ - Search page shows multiple Results at once
+ - Search page has name entry box
+ - More Functions require admin 
+ - Splash screen  has word wrap for the song name
+ - --hold-queue mode where a button is dynamically displayed after every song prompting to play the next song
+ - "To-top"-button in addition to up/down in queue view
+ - Now playing is on the queue page now as well
+ - If multiple screens are connected then display splash and vlc on leftmost. (Hardcoded for now.)
+ - startup batch file example for windows with ngrok-support, yt-dlp-update
+ - queue is persisted into json and loaded on restart (except for the current one because of missing stop-detection)
+ - history of songs played is written to logfile playhistory.txt with timestamp
+
 # PiKaraoke
 
 PiKaraoke is a "KTV"-style karaoke song search and queueing system. It connects to your TV, and shows a QR code for computers and smartphones to connect to a web interface. From there, multiple users can seamlessly search your local track library, queue up songs, add an endless selection of new karaoke tracks from YouTube, and more. Works on Raspberry Pi, OSX, Windows, and Linux!
