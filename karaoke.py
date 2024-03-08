@@ -76,8 +76,8 @@ class Karaoke:
     def load_queue(self):
         logging.info("trying to load queue from " + self.queue_dump_filename())
         if os.path.isfile(self.queue_dump_filename()):
-            with open(self.queue_dump_filename(), "r") as read_file:
-                queue = json.load(read_file, encoding='utf-8')
+            with open(self.queue_dump_filename(), "r", encoding='utf-8') as read_file:
+                queue = json.load(read_file)
                 self.queue = queue
         else:
             self.queue = []
