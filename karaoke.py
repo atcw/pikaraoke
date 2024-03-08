@@ -77,7 +77,7 @@ class Karaoke:
         logging.info("trying to load queue from " + self.queue_dump_filename())
         if os.path.isfile(self.queue_dump_filename()):
             with open(self.queue_dump_filename(), "r") as read_file:
-                queue = json.load(read_file)
+                queue = json.load(read_file, encoding='utf-8')
                 self.queue = queue
         else:
             self.queue = []
@@ -550,8 +550,36 @@ class Karaoke:
                 if os.path.isfile(file.as_posix()):
                     logging.debug("adding song: " + file.name)
                     files_grabbed.append(file.as_posix())
-
+        
         self.available_songs = sorted(files_grabbed, key=lambda f: str.lower(os.path.basename(f)))
+        self.get_durations()
+
+    durations = {}
+
+    def get_durations(self):
+        logging.info(len(self.available_songs))
+        for file in self.available_songs:
+            if file not in self.durations:
+                logging.info(f"notin: {file}")
+                total, min, sec = self.video_duration(file)
+                logging.info(f"duration: {total}")
+                self.durations[file] = total
+            else:
+                logging.info(f"is in: {file}")
+        logging.info(type(list(self.durations)[-1]))
+        logging.info(list(self.durations)[-1])
+        logging.info(f"itemsin: {len(self.durations)}")
+
+    def video_duration(self,filename):
+        import cv2
+        video = cv2.VideoCapture(filename)
+        
+        #duration = video.get(cv2.CAP_PROP_POS_MSEC) # does not work
+        fps = video.get(cv2.CAP_PROP_FPS)
+        frame_count = video.get(cv2.CAP_PROP_FRAME_COUNT)
+
+        seconds = frame_count/fps
+        return seconds, int(seconds/60), int(seconds%60)
 
     def delete(self, song_path):
         logging.info("Deleting song: " + song_path)
