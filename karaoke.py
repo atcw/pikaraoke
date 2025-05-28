@@ -943,7 +943,7 @@ class Karaoke:
 
                         # play history
                         with open("playhistory.txt", "a", encoding='utf-8') as playhistory:
-                            playhistory.write(str(datetime.now())+"\t"+self.queue[0]["title"])
+                            playhistory.write("\n"+str(datetime.now())+"\t"+self.queue[0]["title"])
 
                         self.play_file(self.queue[0]["file"])
                         self.now_playing_user=self.queue[0]["user"]
