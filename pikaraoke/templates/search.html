@@ -57,7 +57,7 @@
   }
   @media screen and (min-width: 768px) {
     ul.search_result_items img {
-      width: 30%;
+      width: 30vw;
     }
     ul.search_result_items li {
       display: flex;
@@ -70,6 +70,9 @@
 </style>
 <script>
   $(function () {
+
+      setInterval(function () { periodicallyChangePreviewImage(); }, 1000);
+
     $("#search_result_selector").focus();
 
     $("#search-link").click(function () {
@@ -324,6 +327,22 @@
     }
   }
 
+   i = -1;
+   function periodicallyChangePreviewImage() {
+    var next = (++i % 4);
+    //var youtube_id = $('#search_result_selector').find(':selected').data('ytid');
+    //var fn = (next == 0) ? "default" : next;
+    //var img_src = 'https://img.youtube.com/vi/' + youtube_id + '/mq' + fn + '.jpg'
+    //$('#youtube-thumb').attr("src", img_src);
+    searchresults = $('.search_result_items li');
+    searchresults.each( function(){
+      var youtube_id = $(this).data('ytid');
+      var fn = (next == 0) ? "default" : next;
+      var img_src = 'https://img.youtube.com/vi/' + youtube_id + '/mq' + fn + '.jpg'
+      $(this).find('img').attr("src", img_src);
+    });
+  }
+
   function changeImage() {
     var next = ++i % 4;
     var youtube_id = $("#search_result_selector")
@@ -547,7 +566,7 @@
         <img src="https://img.youtube.com/vi/{{id}}/0.jpg" />
         <div class="search_result_items_meta">
           {{title}}
-          <button class="button search_result_items_download">Download</button>
+          <button class="button search_result_items_download" style="float: right">Download</button>
         </div>
       </li>
       {% endfor %}
