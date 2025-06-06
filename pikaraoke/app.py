@@ -6,6 +6,8 @@ import logging
 import os
 import sys
 
+from threading import Timer
+
 import flask_babel
 from flask import Flask, request, session
 from flask_babel import Babel
@@ -32,6 +34,8 @@ from pikaraoke.routes.queue import queue_bp
 from pikaraoke.routes.search import search_bp
 from pikaraoke.routes.splash import splash_bp
 from pikaraoke.routes.stream import stream_bp
+
+from pikaraoke.routes.hold import hold_bp
 
 try:
     from urllib.parse import quote
@@ -70,6 +74,8 @@ app.register_blueprint(splash_bp)
 app.register_blueprint(controller_bp)
 app.register_blueprint(nowplaying_bp)
 
+app.register_blueprint(hold_bp)
+
 babel.init_app(app)
 socketio.init_app(app)
 
@@ -97,7 +103,10 @@ def end_song(reason):
 
 @socketio.on("start_song")
 def start_song():
+    logging.info("Song Started - notify via Socket")
     k = get_karaoke_instance()
+    delayed = Timer(5.0, k.docontinuefalse)
+    delayed.start()
     k.start_song()
 
 

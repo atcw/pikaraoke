@@ -37,7 +37,7 @@
       }
     }
 
-    function connectSocket() {
+    function connectSocketBase() {
       socket = io();
       socket.on('connect', function() {
           console.log('Socket connected');
@@ -45,6 +45,61 @@
       socket.on('disconnect', function() {
           console.log('Socket disconnected');
       });
+
+      socket.on("now_playing", np => handleNowPlayingBase(np));
+      socket.on("start_song", (es) => on_start_song_base(es))
+      socket.on("end_song", (es) => on_end_song_base(es))
+    }
+
+    function on_start_song_base(es){
+        console.log("start song received")
+    }
+    function on_end_song_base(es){
+        console.log("end song received")
+         console.log(es)
+    }
+
+    function handleNowPlayingBase(np) {
+        console.log("splash handleNowPlaying")
+        console.log(np.now_playing)
+        if (np.up_next && np.now_playing == null && np.hold_do_hold == true && np.hold_do_continue==false) {
+            console.log("Show next song button")
+            showNextSongButton();
+        }
+        if(np.now_playing != null){
+            console.log("Hide next song button")
+            hideNextSongButton();
+        }
+    }
+
+        function handlenextsongclick() {
+            console.log("handleNextSongClick()")
+            if ($(".nextsongbutton").hasClass("disabled")) {
+                return
+            }
+
+            hideNextSongButton();
+            fetch("{{ url_for('hold.hold_continue') }}", {
+                method: "POST",
+                body: JSON.stringify({}),
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8"
+                }
+            }).then(() => {
+                //setTimeout(()=>{$("#nextsongbutton").removeClass("disabled");},5000) //let getnowplaying() handle it
+                hideNextSongButton();
+            });
+        }
+
+    function showNextSongButton() {
+        console.log("showNextSongButton() called")
+        $(".nextsongbutton").removeClass("disabled")
+        $(".nextsongbutton").addClass("enabled")
+    }
+    function hideNextSongButton() {
+        console.log("hideNextSongButton() called")
+        $(".nextsongbutton").removeClass("enabled")
+        $(".nextsongbutton").addClass("disabled")
     }
 
 
@@ -77,7 +132,15 @@
       return Cookies.get("user");
     }
 
+   function loadNowPlayingBase() {
+    $.get('{{ url_for("now_playing.now_playing") }}', function (data) {
+      handleNowPlayingBase(JSON.parse(data));
+    });
+  }
+
     $(function () {
+        connectSocketBase()
+
       $("#notification-close").click(function () {
         $(".notification").hide();
       });
@@ -89,6 +152,10 @@
         $(".navbar-burger").toggleClass("is-active");
         $(".navbar-menu").toggleClass("is-active");
       });
+
+        $("#nextsongbutton").click(handlenextsongclick)
+
+        loadNowPlayingBase() //on first execution
 
 
       // handle highlighting current nav bar location
@@ -186,6 +253,7 @@
 
 <body>
 
+
   {% if not blank_page %}
   <div class="container" style="padding: 5px; max-width: 900px;">
     <nav class="navbar" role="navigation" aria-label="main navigation">
@@ -261,6 +329,92 @@
 
   {% block body %}
   {% endblock %}
+
+
+<div class="nextsongcontainer overlay">
+    <button class="pulse nextsongbutton disabled" id="nextsongbutton">
+      <i></i>
+      <div>Play next Song</div>
+    </button>
+  </div>
+
+
+  <style type="text/css">
+    button.nextsongbutton i::after {
+      content: '\1F3A4'; display: block; /*🎤 emoji-microphone*/
+      font-size: 3.5rem; font-style: normal; font-weight: 600; color: green;
+    }
+    button.nextsongbutton {
+      background-color: #f1b70e;
+      border-color: transparent;
+      color: #fff;
+    }
+    button.nextsongbutton {
+      border-width: 2px;
+      cursor: pointer;
+      padding: 0.75em 0.75em;
+      border-radius: 0.4em;
+      font-size: larger; font-style: normal; font-weight: 600; color: whitesmoke;
+    }
+    button.nextsongbutton.disabled{
+      background-color: #eee;
+    }
+    button.nextsongbutton div {
+      margin-top: 1em;
+    }
+
+
+    .pulse.enabled {
+      animation: pulse-animation 1s infinite;
+    }
+
+    @keyframes pulse-animation {
+      0% {
+        box-shadow: 0 0 0 0px #ffffff00;
+      }
+      100% {
+        box-shadow: 0 0 0 20px #ffffff1a;
+      }
+    }
+
+    .nextsongbutton{
+      position: fixed;
+      bottom: 100px;
+      right: 40px;
+    }
+
+    @media screen and (max-width: 768px) {
+      .nextsongbutton{
+        position: fixed;
+        /*bottom: 30vh;*/
+        bottom: 40px;
+        right: 40px;
+        padding: 0.5em 0.5em;
+        font-size: 0.5em !important;
+      }
+      button.nextsongbutton div {
+        margin-top: 0.5em !important;
+        font-size: 1.3em !important;
+      }
+    }
+
+    .nextsongbutton.disabled {
+      position: fixed;
+      bottom: -100%;
+
+    }
+    .nextsongbutton {
+      -webkit-transition: bottom;
+      -webkit-transition-duration: 2s;
+      -webkit-transition-timing-function: ease-in;
+
+      transition: bottom;
+      transition-duration: 2s;
+      transition-timing-function: ease-in;
+    }
+
+  </style>
+
 
 </body>
 

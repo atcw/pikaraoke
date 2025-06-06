@@ -86,3 +86,8 @@ table {
 body.hide-cursor * {
   cursor: none !important;
 }
+
+#permissions-button {
+  height: 30vh;
+  width: 30vw;
+}

@@ -13,6 +13,7 @@ from pathlib import Path
 from queue import Queue
 from subprocess import check_output
 from threading import Thread
+from threading import Timer
 
 import qrcode
 from flask_babel import _
@@ -59,6 +60,9 @@ class Karaoke:
     now_playing_notification = None
     is_paused = True
     volume = None
+
+    hold_do_hold = True
+    hold_do_continue = False
 
     # hashes are used to determine if the client needs to update the now playing or queue
     now_playing_hash = None
@@ -554,6 +558,9 @@ class Karaoke:
                 transcode_max_retries -= 1
                 time.sleep(0.05)
 
+        while self.hold_do_continue == False:
+            time.sleep(0.1)
+
         # Check if the stream is ready to play. Determined by:
         # - completed transcoding
         # - buffered file size being greater than a threshold
@@ -566,6 +573,8 @@ class Karaoke:
             self.now_playing_url = stream_url_path
             self.now_playing_user = self.queue[0]["user"]
             self.is_paused = False
+            #self.hold_do_hold = True
+            #self.hold_do_continue = True
             self.queue.pop(0)
             self.update_now_playing_hash()
             self.update_queue_hash()
@@ -591,6 +600,10 @@ class Karaoke:
         logging.info(f"Song starting: {self.now_playing}")
         self.is_playing = True
 
+    def docontinuefalse(self):
+        logging.info("set hold_do_continue to False")
+        self.hold_do_continue = False
+
     def end_song(self, reason=None):
         logging.info(f"Song ending: {self.now_playing}")
         if reason != None:
@@ -601,6 +614,8 @@ class Karaoke:
         self.reset_now_playing()
         self.kill_ffmpeg()
         delete_tmp_dir()
+        #delayed_delete = Timer(10, lambda: delete_tmp_dir()) # there may be stragglers
+        #delayed_delete.start()
         logging.debug("ffmpeg process killed")
 
     def transpose_current(self, semitones):
@@ -806,6 +821,8 @@ class Karaoke:
         self.now_playing_duration = None
         self.ffmpeg_log = None
         self.update_now_playing_hash()
+        #self.hold_do_hold = None
+        #self.hold_do_continue = None
 
     def get_now_playing(self):
         np = {
@@ -818,6 +835,8 @@ class Karaoke:
             "next_user": self.queue[0]["user"] if len(self.queue) > 0 else None,
             "is_paused": self.is_paused,
             "volume": self.volume,
+            "hold_do_hold": self.hold_do_hold,
+            "hold_do_continue": self.hold_do_continue,
         }
         return np
 
@@ -841,6 +860,9 @@ class Karaoke:
             try:
                 if not self.is_file_playing() and self.now_playing != None:
                     self.reset_now_playing()
+                    if self.hold_do_hold == True:
+                        logging.info("Reset hold_continue to False")
+                        self.hold_do_continue = False
                 if len(self.queue) > 0:
                     if not self.is_file_playing():
                         self.reset_now_playing()

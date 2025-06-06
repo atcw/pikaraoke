@@ -98,6 +98,10 @@
       isScoreShown = false;
 	  }
     hideVideo();
+        console.log("Song ended - fading in next etc")
+        //Show What is next
+      $('#bottom-container').fadeIn();
+      //$('#top-container').fadeIn(); // was aktuell spielt muss man im nachhinein nicht sehen.
     socket.emit("end_song", reason);
   }
 
@@ -237,8 +241,38 @@
   }
 
   function handleNowPlaying(np) {
+
+
     console.log(np)
+    const video = getVideoPlayer()
+      // render the queue details in top right
+    if (!isMediaPlaying(video) && np.up_next) {
+        console.log("no media playing but received up_next -> showing")
+      // {# MSG: Label for the next song to be played in the queue. #}
+      up_next_text = "{{ _('Up next:') }}";
+      // {# MSG: Label of the singer for next song to be played in the queue. (Who added it to the queue.) #}
+      next_singer_text = "{{ _('Next singer:') }}";
+      $("#up-next-song").html(np.up_next);
+      $("#up-next-singer").html(np.next_user);
+      $("#up-next").fadeIn();
+    } else {
+      $("#up-next").fadeOut();
+    }
+
+    if (np.hold_do_hold === true){
+        if ( np.hold_do_continue === false){
+        console.log("on_hold")
+
+
+        return;
+        }
+    }
+
     nowPlaying = np;
+
+
+
+
     if (np.now_playing) {
       var nowPlayingHtml = `<span>${np.now_playing}</span> `;
 
@@ -280,7 +314,7 @@
       $("#up-next").fadeOut();
     }
 
-    const video = getVideoPlayer();
+    ;
 
     // Start playback if a valid now_playing_url is provided
     if (
@@ -296,6 +330,10 @@
       }
       $("#video-source").attr("src", np.now_playing_url);
       video.load();
+
+
+
+
       if (volume != np.volume) {
         volume = np.volume;
         video.volume = volume;
@@ -312,10 +350,18 @@
 
       video.play();
 
+        $('#qr-code').fadeOut();
+
       // handle timeout if video fails to play
       setTimeout(() => {
         if (!isMediaPlaying(video) && !video.paused) {
           endSong("failed to start");
+        } else{
+            //alles ausblenden nach 10 Sekunden
+            //$("#up-next").fadeOut();
+            //$("#now-playing").fadeOut();
+            $('#bottom-container').fadeOut();
+            $('#top-container').fadeOut();
         }
       }, 10000);
     }
@@ -452,6 +498,10 @@
         });
         console.log(`Pause`);
       }
+    });
+
+    socket.on('hold_continue', () => {
+        window.hold_continue = true
     });
 
     socket.on('play', () => {
@@ -630,7 +680,7 @@
       trans %}Due to limititations with browser permissions, you must interact
       with the page once before it allows autoplay of videos. Pikaraoke will not
       play otherwise. Click the button below to
-      <a onClick="handleConfirmation()">confirm</a> .{% endtrans %}
+      <a onClick="handleConfirmation()">Enable Autoplay Of Videos</a> .{% endtrans %}
     </p>
     <div class="has-text-centered">
       <button
@@ -771,6 +821,7 @@
     width: 100vw;
   }
   #logo-container {
+      pointer-events: none; /*clickthrough for nextsongbutton*/
     position: absolute;
     z-index: 1;
     display: flex;
