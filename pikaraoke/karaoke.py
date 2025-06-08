@@ -181,7 +181,7 @@ class Karaoke:
         # get songs from download_path
         self.get_available_songs()
 
-        self.load_queue()
+        # self.load_queue() # 2do borks ffmpeg transcode
 
         self.generate_qr_code()
         #self.queue_dump_filename = os.path.join(self.get_script_path(), "queuebackup.json")
