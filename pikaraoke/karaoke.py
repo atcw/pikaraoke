@@ -15,6 +15,7 @@ from queue import Queue
 from subprocess import check_output
 from threading import Thread
 from threading import Timer
+from datetime import datetime
 
 import qrcode
 from flask_babel import _
@@ -194,6 +195,9 @@ class Karaoke:
 
     def queue_dump_fn(self):
         return os.path.join(self.download_path, "queuebackup.json")
+
+    def play_history_fn(self):
+        return os.path.join(self.download_path, "playhistory.txt")
 
     def dump_queue(self):
         queue_dump_filename = self.queue_dump_fn()
@@ -494,6 +498,11 @@ class Karaoke:
 
     def play_file(self, file_path, semitones=0):
         logging.info(f"Playing file: {file_path} transposed {semitones} semitones")
+
+        # play history
+        with open(self.play_history_fn(), "a", encoding='utf-8') as playhistory:
+            playhistory.write("\n" + str(datetime.now()) + "\t" + self.queue[0]["title"] + "\t" + self.now_playing_filename)
+            #playhistory.write("\n" + str(datetime.now()) + "\t" + self.now_playing_filename)
 
         requires_transcoding = (
             semitones != 0
