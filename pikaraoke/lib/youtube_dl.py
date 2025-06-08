@@ -63,6 +63,8 @@ def build_ytdl_download_command(
     )
     cmd = [youtubedl_path, "-f", file_quality, "-o", dl_path]
     if youtubedl_proxy:
-        cmd += ["--proxy", youtubedl_proxy]
+        # abuse option
+        # cmd += ["--proxy", youtubedl_proxy]
+        cmd += ["--cookies-from-browser", "firefox"]
     cmd += [video_url]
     return cmd
