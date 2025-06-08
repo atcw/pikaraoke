@@ -8,6 +8,7 @@ import random
 import shutil
 import socket
 import subprocess
+import sys
 import time
 from pathlib import Path
 from queue import Queue
@@ -83,6 +84,9 @@ class Karaoke:
     normalize_audio = False
 
     config_obj = configparser.ConfigParser()
+
+    queue_dump_filename = "queuebackup.json"
+
 
     def __init__(
         self,
@@ -176,7 +180,35 @@ class Karaoke:
         # get songs from download_path
         self.get_available_songs()
 
+        self.load_queue()
+
         self.generate_qr_code()
+        #self.queue_dump_filename = os.path.join(self.get_script_path(), "queuebackup.json")
+        #self.queue_dump_filename = os.path.join(self.download_path, "queuebackup.json")
+        #print("dlpath",self.download_path)
+
+
+
+    def get_script_path(self):
+        return os.path.dirname(os.path.realpath(sys.argv[0]))
+
+    def queue_dump_fn(self):
+        return os.path.join(self.download_path, "queuebackup.json")
+
+    def dump_queue(self):
+        queue_dump_filename = self.queue_dump_fn()
+        print("queue_dump_fn", self.queue_dump_fn())
+        with open(queue_dump_filename, 'w') as fout:
+            json.dump(self.queue, fout)
+
+    def load_queue(self):
+        logging.info("trying to load queue from " + self.queue_dump_fn())
+        if os.path.isfile(self.queue_dump_fn()):
+            with open(self.queue_dump_fn(), "r") as read_file:
+                queue = json.load(read_file)
+                self.queue = queue
+        else:
+            self.queue = []
 
     def get_url(self):
         if self.is_raspberry_pi:
@@ -477,6 +509,7 @@ class Karaoke:
         except Exception as e:
             logging.error("Error resolving file: " + str(e))
             self.queue.pop(0)
+            self.dump_queue()  # persistence
             return False
 
         if self.complete_transcode_before_play or not requires_transcoding:
@@ -585,11 +618,14 @@ class Karaoke:
                 transcode_max_retries -= 1
             if self.is_playing:
                 logging.debug("Stream is playing")
+
             else:
                 logging.error(
                     "Stream was not playable! Run with debug logging to see output. Skipping track"
                 )
                 self.end_song()
+
+        return None
 
     def kill_ffmpeg(self):
         logging.debug("Killing ffmpeg process")
@@ -672,6 +708,7 @@ class Karaoke:
                     # MSG: Message shown after the song is added to the queue
                     self.log_and_send(_("%s added to the queue: %s") % (user, queue_item["title"]))
                 self.queue.append(queue_item)
+            self.dump_queue()  # persistence
             self.update_queue_hash()
             self.update_now_playing_hash()
             return [True, _("Song added to the queue: %s") % (self.filename_from_path(song_path))]
@@ -851,6 +888,7 @@ class Karaoke:
         self.queue_hash = hashlib.md5(
             json.dumps(self.queue, ensure_ascii=True).encode("utf-8", "ignore")
         ).hexdigest()
+        self.dump_queue()  # persistence
 
     def run(self):
         logging.info("Starting PiKaraoke!")
