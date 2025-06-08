@@ -633,7 +633,7 @@ class Karaoke:
                 logging.error(
                     "Stream was not playable! Run with debug logging to see output. Skipping track"
                 )
-                self.end_song()
+                #self.end_song()
 
         return None
 
