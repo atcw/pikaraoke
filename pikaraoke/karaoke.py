@@ -501,7 +501,8 @@ class Karaoke:
 
         # play history
         with open(self.play_history_fn(), "a", encoding='utf-8') as playhistory:
-            playhistory.write("\n" + str(datetime.now()) + "\t" + self.queue[0]["title"] + "\t" + self.now_playing_filename)
+            playhistory.write("\n" + str(datetime.now()) + "\t" + self.queue[0]["title"] + "\t")
+            #playhistory.write("\n" + str(datetime.now()) + "\t" + self.queue[0]["title"] + "\t" + self.now_playing_filename)
             #playhistory.write("\n" + str(datetime.now()) + "\t" + self.now_playing_filename)
 
         requires_transcoding = (
